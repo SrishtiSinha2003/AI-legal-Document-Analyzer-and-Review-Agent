@@ -8,6 +8,7 @@ const SUGGESTED = [
   "Which clauses are most risky for me as a founder?",
 ];
 
+
 export default function ChatPanel({ context }) {
   const [messages, setMessages] = useState([
     {

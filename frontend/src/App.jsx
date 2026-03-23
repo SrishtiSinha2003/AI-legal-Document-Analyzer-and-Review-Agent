@@ -1,5 +1,5 @@
 import { useState } from "react";
-
+import ExportButton from "./components/ExportButton";
 function App() {
   const [file, setFile] = useState(null);
   const [data, setData] = useState(null);
@@ -39,10 +39,12 @@ function App() {
       {/* Results */}
       {data && (
         <div style={{ marginTop: "30px" }}>
-          
+            <ExportButton />
+             {/* ✅ REPORT WRAPPER */}
+              <div id="report" style={{ background: "white", color: "black", padding: "20px", borderRadius: "10px", marginTop: "20px"}}>    
           {/* Summary */}
-          <div style={{ background: "#1e293b", padding: "20px", borderRadius: "10px" }}>
-            <h2>🧠 AI Summary</h2>
+          <div style={{ background: "white", padding: "20px", borderRadius: "10px" }}>
+            <h2 style={{ color: "black" }}>🧠 AI Summary</h2>
             <p>{data.summary}</p>
           </div>
 
@@ -55,9 +57,9 @@ function App() {
 
           {/* Clauses */}
           <div style={{ marginTop: "20px" }}>
-            <h2>📄 Clauses</h2>
+            <h2 style={{ color: "black" }}>📄 Clauses</h2>
             {data.segments.map((s, i) => (
-              <div key={i} style={{ background: "#1e293b", margin: "10px 0", padding: "15px", borderRadius: "8px" }}>
+              <div key={i} style={{ background: "white", margin: "10px 0", padding: "15px", borderRadius: "8px" }}>
                 <h3>{s.title}</h3>
                 <p>{s.text}</p>
                 <p>⚠️ Risk: {s.risk}</p>
@@ -65,6 +67,7 @@ function App() {
             ))}
           </div>
 
+        </div>
         </div>
       )}
     </div>

@@ -77,30 +77,55 @@ def regex_segment(text: str) -> List[Dict]:
 
 def llm_segment(text: str) -> List[Dict]:
     """
-    Fallback: ask GPT to identify clause boundaries.
-    Returns list of {title, text} dicts.
-    Used only when regex finds < 3 segments.
+    Fallback: use Groq LLM to split document into sections.
     """
-    client = openai.OpenAI(api_key=os.getenv(""))
-    prompt = (
-        "You are a legal document parser. Split the following contract text into "
-        "logical sections. Return ONLY a JSON array of objects with keys 'title' and 'text'. "
-        "Do not add commentary.\n\n" + text[:6000]
-    )
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}],
-        response_format={"type": "json_object"},
-    )
+
+    from groq import Groq
     import json
-    raw = response.choices[0].message.content
-    data = json.loads(raw)
-    # GPT may wrap in a key
-    if isinstance(data, dict):
-        for v in data.values():
-            if isinstance(v, list):
-                return v
-    return data if isinstance(data, list) else []
+
+    client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+
+    prompt = f"""
+Split the following legal document into sections.
+
+Return ONLY valid JSON in this exact format:
+[
+  {{
+    "title": "Section title",
+    "text": "Section content"
+  }}
+]
+
+Rules:
+- No markdown (*, |, #, -)
+- No explanations
+- No extra text
+- Only return JSON array
+
+Document:
+{text[:6000]}
+"""
+
+    try:
+        response = client.chat.completions.create(
+            model="llama3-70b-8192",  # or mixtral
+            messages=[{"role": "user", "content": prompt}],
+        )
+
+        raw = response.choices[0].message.content.strip()
+
+        # 🔥 CLEAN JSON (important for Groq)
+        start = raw.find("[")
+        end = raw.rfind("]") + 1
+        cleaned = raw[start:end]
+
+        data = json.loads(cleaned)
+
+        return data if isinstance(data, list) else []
+
+    except Exception as e:
+        print(f"[ingestion] Groq segmentation failed: {e}")
+        return []
 
 
 def ingest_pdf(path: str) -> List[Dict]:
